@@ -1,0 +1,6 @@
+en:
+  theme_metadata:
+    description: Allows users to define the prefered display method for topics in
+      different categories.
+    settings:
+      example_setting: A description of a setting.
