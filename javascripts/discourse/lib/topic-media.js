@@ -48,16 +48,15 @@ export function topicMediaMasonrySpans(
       metrics.columnWidth * columnSpan + metrics.columnGap * (columnSpan - 1);
   }
 
-  const targetHeight = Math.max(
-    metrics.minimumHeight,
-    targetWidth / aspectRatio
-  );
+  const imageHeight = targetWidth / aspectRatio;
+  const isConstrained = imageHeight < metrics.minimumHeight;
+  const targetHeight = Math.max(metrics.minimumHeight, imageHeight);
   const rowSpan = Math.ceil(
     (targetHeight + metrics.itemGap + metrics.rowGap) /
       (metrics.rowHeight + metrics.rowGap)
   );
 
-  return { columnSpan, rowSpan };
+  return { columnSpan, isConstrained, rowSpan };
 }
 
 export function topicMediaImageUrl(topic, layoutId) {

@@ -54,34 +54,50 @@ module("Unit | Lib | topic-media", function () {
       topicMediaMasonrySpans({
         thumbnails: [{ height: 400, width: 800 }],
       }),
-      { columnSpan: 3, rowSpan: 111 },
+      { columnSpan: 3, isConstrained: false, rowSpan: 111 },
       "a panoramic image spans enough columns to retain the minimum height"
     );
     assert.deepEqual(
       topicMediaMasonrySpans({
         thumbnails: [{ height: 400, width: 600 }],
       }),
-      { columnSpan: 2, rowSpan: 98 },
+      { columnSpan: 2, isConstrained: false, rowSpan: 98 },
       "an ordinary landscape image expands to retain the minimum height"
     );
     assert.deepEqual(
       topicMediaMasonrySpans({
         thumbnails: [{ height: 400, width: 1600 }],
       }),
-      { columnSpan: 3, rowSpan: 77 },
+      { columnSpan: 3, isConstrained: true, rowSpan: 77 },
       "an extra-wide image spans enough columns to retain the minimum height"
     );
     assert.deepEqual(
       topicMediaMasonrySpans({
         thumbnails: [{ height: 800, width: 400 }],
       }),
-      { columnSpan: 1, rowSpan: 141 },
+      { columnSpan: 1, isConstrained: false, rowSpan: 141 },
       "a tall image receives enough rows for its aspect ratio"
     );
     assert.deepEqual(
       topicMediaMasonrySpans({}),
-      { columnSpan: 2, rowSpan: 145 },
+      { columnSpan: 2, isConstrained: false, rowSpan: 145 },
       "a topic without image dimensions is treated as a square tile"
+    );
+    assert.deepEqual(
+      topicMediaMasonrySpans(
+        { thumbnails: [{ height: 400, width: 1600 }] },
+        {
+          columnGap: 1,
+          columnWidth: 17,
+          itemGap: 1,
+          maxColumnSpan: 1,
+          minimumHeight: 14,
+          rowGap: 0.125,
+          rowHeight: 0.125,
+        }
+      ),
+      { columnSpan: 1, isConstrained: true, rowSpan: 61 },
+      "an image cannot exceed the columns available on a narrow viewport"
     );
   });
 

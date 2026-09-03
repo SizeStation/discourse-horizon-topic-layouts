@@ -15,6 +15,19 @@ const CATEGORY_COLOR_PATTERN = /^[0-9a-f]{6}$/i;
 export default class TopicMediaThumbnail extends Component {
   @service("horizon-topic-layout-preferences") layoutPreferences;
 
+  #classificationFrame;
+  #gridInlineSize;
+  #resizeObserver;
+
+  willDestroy() {
+    super.willDestroy(...arguments);
+
+    if (this.#classificationFrame) {
+      globalThis.cancelAnimationFrame(this.#classificationFrame);
+    }
+    this.#resizeObserver?.disconnect();
+  }
+
   get categoryColorStyle() {
     const color = this.args.outletArgs.topic.category?.color;
 
@@ -32,6 +45,10 @@ export default class TopicMediaThumbnail extends Component {
     );
   }
 
+  get isMasonry() {
+    return this.layoutPreferences.activeLayoutId === "masonry";
+  }
+
   get shouldRender() {
     return usesTopicMedia(this.layoutPreferences.activeLayoutId);
   }
@@ -45,7 +62,8 @@ export default class TopicMediaThumbnail extends Component {
       return;
     }
 
-    requestAnimationFrame(() => this.#classifyLoadedImage(image, topicCard));
+    this.#observeGrid(image, topicCard);
+    this.#scheduleClassification(image, topicCard);
   }
 
   #classifyLoadedImage(image, topicCard) {
@@ -72,7 +90,7 @@ export default class TopicMediaThumbnail extends Component {
         itemGap: Number.parseFloat(itemStyles.marginBlockEnd),
         maxColumnSpan: Math.max(
           1,
-          Math.floor(
+          Math.round(
             (masonryGrid.getBoundingClientRect().width + columnGap) /
               (columnWidth + columnGap)
           )
@@ -83,7 +101,7 @@ export default class TopicMediaThumbnail extends Component {
       };
     }
 
-    const { columnSpan, rowSpan } = topicMediaMasonrySpans(
+    const { columnSpan, isConstrained, rowSpan } = topicMediaMasonrySpans(
       {
         thumbnails: [
           { height: image.naturalHeight, width: image.naturalWidth },
@@ -94,12 +112,57 @@ export default class TopicMediaThumbnail extends Component {
 
     topicCard.style.setProperty("--topic-media-column-span", columnSpan);
     topicCard.style.setProperty("--topic-media-row-span", rowSpan);
+    topicCard.classList.toggle("has-constrained-media", isConstrained);
+  }
+
+  #observeGrid(image, topicCard) {
+    if (this.#resizeObserver) {
+      return;
+    }
+
+    const topicGrid = topicCard.closest(".topic-list-body");
+
+    if (!topicGrid) {
+      return;
+    }
+
+    this.#resizeObserver = new ResizeObserver(([entry]) => {
+      const inlineSize = entry.contentRect.width;
+
+      if (inlineSize === this.#gridInlineSize) {
+        return;
+      }
+
+      this.#gridInlineSize = inlineSize;
+      this.#scheduleClassification(image, topicCard);
+    });
+    this.#resizeObserver.observe(topicGrid);
+  }
+
+  #scheduleClassification(image, topicCard) {
+    if (this.#classificationFrame) {
+      globalThis.cancelAnimationFrame(this.#classificationFrame);
+    }
+
+    this.#classificationFrame = globalThis.requestAnimationFrame(() => {
+      this.#classificationFrame = null;
+      this.#classifyLoadedImage(image, topicCard);
+    });
   }
 
   <template>
     {{#if this.shouldRender}}
       <div class="horizon-topic-media" aria-hidden="true">
         {{#if this.imageUrl}}
+          {{#if this.isMasonry}}
+            <img
+              class="horizon-topic-media__backdrop"
+              src={{this.imageUrl}}
+              alt=""
+              loading="lazy"
+              decoding="async"
+            />
+          {{/if}}
           <img
             class="horizon-topic-media__image"
             src={{this.imageUrl}}
