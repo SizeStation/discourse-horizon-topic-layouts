@@ -4,8 +4,11 @@ import { htmlSafe } from "@ember/template";
 import dIcon from "discourse/ui-kit/helpers/d-icon";
 
 const CATEGORY_COLOR_PATTERN = /^[0-9a-f]{6}$/i;
-const THUMBNAIL_HEIGHT = 240;
-const THUMBNAIL_WIDTH = 320;
+const TOPIC_MEDIA_SIZES = Object.freeze({
+  gallery: [640, 480],
+  masonry: [640, 480],
+  "media-list": [320, 240],
+});
 
 export default class TopicMediaThumbnail extends Component {
   @service("horizon-topic-layout-preferences") layoutPreferences;
@@ -22,16 +25,18 @@ export default class TopicMediaThumbnail extends Component {
 
   get imageUrl() {
     const topic = this.args.outletArgs.topic;
+    const [maxWidth, maxHeight] =
+      TOPIC_MEDIA_SIZES[this.layoutPreferences.activeLayoutId] ?? [];
     const thumbnail = topic.thumbnails?.find(
       ({ max_height, max_width }) =>
-        max_height === THUMBNAIL_HEIGHT && max_width === THUMBNAIL_WIDTH
+        max_height === maxHeight && max_width === maxWidth
     );
 
     return thumbnail?.url ?? topic.image_url;
   }
 
   get shouldRender() {
-    return this.layoutPreferences.activeLayoutId === "media-list";
+    return Boolean(TOPIC_MEDIA_SIZES[this.layoutPreferences.activeLayoutId]);
   }
 
   <template>

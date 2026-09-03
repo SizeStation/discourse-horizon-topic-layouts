@@ -49,6 +49,8 @@ Minimal presents topic data as flat, border-separated rows containing the title,
 
 Media list preserves the native high-context card content and adds a lazy-loaded topic thumbnail on the left. It requests a 320×240 optimized thumbnail, falls back to the original topic image while optimized thumbnails are generated, and displays a category-colored placeholder for topics without an image.
 
+Gallery presents topics in a responsive, uniform-height grid with 640×480 image backgrounds. Cards retain the title, category, up to two tags, status, statistics, and activity while omitting author details and excerpts. Category and tags occupy a separate row above the statistics and activity to prevent crowded metadata. A theme-aware overlay keeps card content readable, and topics without images reuse the category-colored placeholder.
+
 These modes assume Horizon's default `topic_card_high_context` setting remains enabled.
 
 ## Development
