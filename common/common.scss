@@ -844,6 +844,10 @@
   .hc-topic-card .horizon-topic-media__image {
     position: relative;
     z-index: 1;
+    object-fit: cover;
+  }
+
+  .topic-list-item.has-constrained-media .horizon-topic-media__image {
     object-fit: contain;
   }
 
