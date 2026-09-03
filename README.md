@@ -51,6 +51,8 @@ Media list preserves the native high-context card content and adds a lazy-loaded
 
 Gallery presents topics in a responsive, uniform-height grid with 640×480 image backgrounds. Cards retain the title, category, up to two tags, status, statistics, and activity while omitting author details and excerpts. Category and tags occupy a separate row above the statistics and activity to prevent crowded metadata. A theme-aware overlay keeps card content readable, and topics without images reuse the category-colored placeholder.
 
+Masonry reuses the Gallery image cards in a responsive dense mosaic. Card spans are calculated from each loaded image's intrinsic dimensions and the rendered grid measurements. Only panoramic images span two columns; ordinary landscape images remain one column and become shorter, while portrait images extend vertically. Fine-grained grid rows closely match the calculated image height while reserving consistent space between cards. Images use containment rather than cropping so the complete requested thumbnail remains visible, and a stronger theme-aware scrim keeps titles readable over pale imagery. Narrow viewports keep every card to one column. Gallery metadata and category-colored fallback behavior are preserved.
+
 These modes assume Horizon's default `topic_card_high_context` setting remains enabled.
 
 ## Development
