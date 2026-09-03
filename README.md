@@ -47,6 +47,8 @@ Compact restyles those existing cards without replacing their template. It keeps
 
 Minimal presents topic data as flat, border-separated rows containing the title, up to three tags, replies, activity, and compact topic-status icons. Narrow viewports show one tag and move tags and activity to a second line. The supplementary Hot status is omitted.
 
+Media list preserves the native high-context card content and adds a lazy-loaded topic thumbnail on the left. It requests a 320×240 optimized thumbnail, falls back to the original topic image while optimized thumbnails are generated, and displays a category-colored placeholder for topics without an image.
+
 These modes assume Horizon's default `topic_card_high_context` setting remains enabled.
 
 ## Development

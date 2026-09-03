@@ -9,5 +9,7 @@
   "minimum_discourse_version": null,
   "maximum_discourse_version": null,
   "assets": {},
-  "modifiers": {}
+  "modifiers": {
+    "topic_thumbnail_sizes": [[320, 240]]
+  }
 }

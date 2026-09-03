@@ -45,7 +45,7 @@ category_layout_rules:
         type: boolean
 
 svg_icons:
-  default: rectangle-list|bars-staggered|align-justify|table-list|grip|cubes-stacked|angle-down|check|rotate-left
+  default: rectangle-list|bars-staggered|align-justify|table-list|grip|cubes-stacked|angle-down|check|rotate-left|image
   type: list
   list_type: compact
   hidden: true
