@@ -43,9 +43,11 @@ Administrators can add Category layout rules through the component's theme setti
 
 Comfortable deliberately adds no visual overrides and preserves Horizon's native high-context topic cards.
 
-Compact restyles those existing cards without replacing their template. It keeps the creator avatar, title, category and tags, status, activity time, and topic statistics while hiding verbose author text, excerpts, assignment details, and reply wording. Metadata moves to a second row when the available width cannot support the single-row presentation.
+Compact restyles those existing cards without replacing their template. It keeps the creator avatar, title, shortened excerpt, category, up to three tags, status, activity time, and topic statistics while hiding verbose author text, assignment details, and reply wording. Wide viewports place category and tags above replies and activity in a stable metadata region; narrower viewports move that metadata into secondary rows.
 
-Both modes assume Horizon's default `topic_card_high_context` setting remains enabled.
+Minimal presents topic data as flat, border-separated rows containing the title, up to three tags, replies, activity, and compact topic-status icons. Narrow viewports show one tag and move tags and activity to a second line. The supplementary Hot status is omitted.
+
+These modes assume Horizon's default `topic_card_high_context` setting remains enabled.
 
 ## Development
 
