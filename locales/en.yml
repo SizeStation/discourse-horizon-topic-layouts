@@ -1,6 +1,16 @@
 en:
   theme_metadata:
-    description: Allows users to define the prefered display method for topics in
-      different categories.
+    description: Adds selectable topic list layouts for Horizon.
     settings:
-      example_setting: A description of a setting.
+      global_default_layout: The layout used when a visitor has not chosen one.
+
+  selector:
+    use_category_default: Use category default
+    use_global_default: Use global default
+    layouts:
+      comfortable: Comfortable
+      compact: Compact
+      minimal: Minimal
+      media_list: Media list
+      gallery: Gallery
+      masonry: Masonry

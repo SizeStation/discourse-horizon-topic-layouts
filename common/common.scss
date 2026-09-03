@@ -1,0 +1,56 @@
+.horizon-topic-layout-selector {
+  display: flex;
+  min-inline-size: 0;
+
+  &__trigger {
+    align-items: center;
+    block-size: 100%;
+    max-inline-size: 100%;
+    justify-content: center;
+    gap: 0.5em;
+  }
+
+  &__trigger-caret {
+    flex: none;
+    margin-inline-start: auto;
+  }
+
+  &__menu {
+    inline-size: min(18rem, calc(100vw - 2rem));
+    max-inline-size: 100%;
+  }
+
+  &__option-wrapper {
+    position: relative;
+  }
+
+  &__option,
+  &__reset {
+    inline-size: 100%;
+    min-block-size: 2.75rem;
+    justify-content: flex-start;
+    text-align: start;
+  }
+
+  &__option {
+    padding-inline-end: 2.75rem;
+  }
+
+  &__option.is-active {
+    color: var(--tertiary);
+    background: var(--tertiary-very-low);
+  }
+
+  &__selected-icon {
+    position: absolute;
+    inset-block-start: 50%;
+    inset-inline-end: 1rem;
+    color: var(--tertiary);
+    pointer-events: none;
+    transform: translateY(-50%);
+  }
+
+  &__reset {
+    border-block-start: 1px solid var(--primary-low);
+  }
+}

@@ -1,2 +1,16 @@
-example_setting:
-  default: true
+global_default_layout:
+  default: comfortable
+  type: enum
+  choices:
+    - comfortable
+    - compact
+    - minimal
+    - media-list
+    - gallery
+    - masonry
+
+svg_icons:
+  default: rectangle-list|bars-staggered|align-justify|table-list|grip|cubes-stacked|angle-down|check|rotate-left
+  type: list
+  list_type: compact
+  hidden: true
