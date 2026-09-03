@@ -39,6 +39,14 @@ Administrators can add Category layout rules through the component's theme setti
 - Categories without a configuration inherit the global default and expose every layout.
 - If duplicate configurations target one category, the first configuration is used.
 
+## Layout implementations
+
+Comfortable deliberately adds no visual overrides and preserves Horizon's native high-context topic cards.
+
+Compact restyles those existing cards without replacing their template. It keeps the creator avatar, title, category and tags, status, activity time, and topic statistics while hiding verbose author text, excerpts, assignment details, and reply wording. Metadata moves to a second row when the available width cannot support the single-row presentation.
+
+Both modes assume Horizon's default `topic_card_high_context` setting remains enabled.
+
 ## Development
 
 Install this nested theme component's dependencies independently from the main Discourse workspace:
