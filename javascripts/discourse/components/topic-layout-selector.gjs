@@ -10,7 +10,6 @@ import DDropdownMenu from "discourse/ui-kit/d-dropdown-menu";
 import dConcatClass from "discourse/ui-kit/helpers/d-concat-class";
 import dIcon from "discourse/ui-kit/helpers/d-icon";
 import { i18n } from "discourse-i18n";
-import { TOPIC_LAYOUTS } from "../lib/topic-layouts";
 
 const TopicLayoutTrigger = <template>
   <button
@@ -26,34 +25,24 @@ const TopicLayoutTrigger = <template>
 </template>;
 
 export default class TopicLayoutSelector extends Component {
-  @service router;
   @service("horizon-topic-layout-preferences") layoutPreferences;
-
-  layouts = TOPIC_LAYOUTS;
 
   constructor() {
     super(...arguments);
-    this.router.on("routeDidChange", this.updateContext);
-    this.#activateContext();
-  }
-
-  willDestroy() {
-    super.willDestroy(...arguments);
-    this.router.off("routeDidChange", this.updateContext);
-    this.layoutPreferences.deactivateContext();
+    this.layoutPreferences.activateContext(this.#initialCategoryId);
   }
 
   get activeLayout() {
     return this.layoutPreferences.activeLayout;
   }
 
-  get categoryId() {
-    return this.args.outletArgs.category?.id;
+  get layouts() {
+    return this.layoutPreferences.availableLayouts;
   }
 
   get resetLabel() {
     return themePrefix(
-      this.categoryId
+      this.layoutPreferences.isCategoryContext
         ? "selector.use_category_default"
         : "selector.use_global_default"
     );
@@ -61,6 +50,10 @@ export default class TopicLayoutSelector extends Component {
 
   get triggerLabel() {
     return i18n(this.activeLayout.label);
+  }
+
+  get #initialCategoryId() {
+    return this.args.outletArgs.category?.id;
   }
 
   @action
@@ -73,18 +66,6 @@ export default class TopicLayoutSelector extends Component {
   async selectLayout(layoutId, dMenu) {
     this.layoutPreferences.selectLayout(layoutId);
     await dMenu.close();
-  }
-
-  @action
-  updateContext() {
-    this.#activateContext();
-  }
-
-  #activateContext() {
-    this.layoutPreferences.activateContext(
-      this.categoryId,
-      this.router.currentRouteName
-    );
   }
 
   <template>

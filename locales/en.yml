@@ -3,6 +3,28 @@ en:
     description: Adds selectable topic list layouts for Horizon.
     settings:
       global_default_layout: The layout used when a visitor has not chosen one.
+      category_layout_rules:
+        description: Set a default layout and hide layouts for individual categories.
+        schema:
+          properties:
+            categories:
+              label: Category
+              description: Select one category for this rule.
+            default_layout:
+              label: Default layout
+              description: The layout used when a visitor has not chosen one for this category.
+            hide_comfortable:
+              label: Hide comfortable
+            hide_compact:
+              label: Hide compact
+            hide_minimal:
+              label: Hide minimal
+            hide_media_list:
+              label: Hide media list
+            hide_gallery:
+              label: Hide gallery
+            hide_masonry:
+              label: Hide masonry
 
   selector:
     use_category_default: Use category default

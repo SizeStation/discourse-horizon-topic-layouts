@@ -9,6 +9,41 @@ global_default_layout:
     - gallery
     - masonry
 
+category_layout_rules:
+  type: objects
+  default: []
+  schema:
+    name: category rule
+    properties:
+      categories:
+        type: categories
+        required: true
+        validations:
+          min: 1
+          max: 1
+      default_layout:
+        type: enum
+        required: true
+        choices:
+          - comfortable
+          - compact
+          - minimal
+          - media-list
+          - gallery
+          - masonry
+      hide_comfortable:
+        type: boolean
+      hide_compact:
+        type: boolean
+      hide_minimal:
+        type: boolean
+      hide_media_list:
+        type: boolean
+      hide_gallery:
+        type: boolean
+      hide_masonry:
+        type: boolean
+
 svg_icons:
   default: rectangle-list|bars-staggered|align-justify|table-list|grip|cubes-stacked|angle-down|check|rotate-left
   type: list

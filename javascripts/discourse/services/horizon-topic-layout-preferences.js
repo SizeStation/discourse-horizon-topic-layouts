@@ -2,6 +2,12 @@ import { tracked } from "@glimmer/tracking";
 import Service, { service } from "@ember/service";
 import { settings } from "virtual:theme";
 import {
+  availableTopicLayouts,
+  defaultTopicLayout,
+  isTopicLayoutAvailable,
+  resolveTopicLayout,
+} from "../lib/topic-layout-config";
+import {
   layoutContextKey,
   readLayoutPreference,
   removeLayoutPreference,
@@ -10,7 +16,6 @@ import {
 import {
   DEFAULT_TOPIC_LAYOUT,
   findTopicLayout,
-  isTopicLayout,
   TOPIC_LAYOUTS,
 } from "../lib/topic-layouts";
 
@@ -18,19 +23,33 @@ const layoutClass = (layoutId) => `horizon-topic-layouts--${layoutId}`;
 
 export default class HorizonTopicLayoutPreferences extends Service {
   @service currentUser;
+  @service router;
 
   @tracked activeLayoutId = DEFAULT_TOPIC_LAYOUT;
   @tracked contextKey = null;
+  @tracked _categoryId = null;
 
   get activeLayout() {
     return findTopicLayout(this.activeLayoutId);
+  }
+
+  get availableLayouts() {
+    return availableTopicLayouts(
+      this._categoryId,
+      settings.category_layout_rules,
+      settings.global_default_layout
+    );
+  }
+
+  get isCategoryContext() {
+    return Boolean(this._categoryId);
   }
 
   get isSupportedContext() {
     return Boolean(this.contextKey);
   }
 
-  activateContext(categoryId, routeName) {
+  activateContext(categoryId, routeName = this.router.currentRouteName) {
     const contextKey = layoutContextKey(categoryId, routeName);
     const storedLayout = readLayoutPreference(
       this.#storage,
@@ -38,15 +57,19 @@ export default class HorizonTopicLayoutPreferences extends Service {
       contextKey
     );
 
+    this._categoryId = categoryId ?? null;
     this.contextKey = contextKey;
-    this.activeLayoutId = storedLayout ?? this.#defaultLayoutId;
+    this.activeLayoutId = resolveTopicLayout(
+      storedLayout,
+      this._categoryId,
+      settings.category_layout_rules,
+      settings.global_default_layout
+    );
     this.#applyLayoutClass();
   }
 
-  deactivateContext() {
-    this.contextKey = null;
-    this.activeLayoutId = this.#defaultLayoutId;
-    this.#applyLayoutClass();
+  activateCurrentRoute() {
+    this.activateContext(this.#categoryIdFromCurrentRoute());
   }
 
   resetLayout() {
@@ -56,7 +79,15 @@ export default class HorizonTopicLayoutPreferences extends Service {
   }
 
   selectLayout(layoutId) {
-    if (!this.contextKey || !isTopicLayout(layoutId)) {
+    if (
+      !this.contextKey ||
+      !isTopicLayoutAvailable(
+        layoutId,
+        this._categoryId,
+        settings.category_layout_rules,
+        settings.global_default_layout
+      )
+    ) {
       return;
     }
 
@@ -71,9 +102,11 @@ export default class HorizonTopicLayoutPreferences extends Service {
   }
 
   get #defaultLayoutId() {
-    return isTopicLayout(settings.global_default_layout)
-      ? settings.global_default_layout
-      : DEFAULT_TOPIC_LAYOUT;
+    return defaultTopicLayout(
+      this._categoryId,
+      settings.category_layout_rules,
+      settings.global_default_layout
+    );
   }
 
   get #storage() {
@@ -100,5 +133,18 @@ export default class HorizonTopicLayoutPreferences extends Service {
     if (this.contextKey) {
       root.classList.add(layoutClass(this.activeLayoutId));
     }
+  }
+
+  #categoryIdFromCurrentRoute() {
+    for (let route = this.router.currentRoute; route; route = route.parent) {
+      const categoryPath = route.params?.category_slug_path_with_id;
+
+      if (categoryPath) {
+        const categoryId = Number(categoryPath.split("/").at(-1));
+        return categoryId > 0 ? categoryId : null;
+      }
+    }
+
+    return null;
   }
 }

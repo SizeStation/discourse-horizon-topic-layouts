@@ -4,9 +4,10 @@ A Discourse theme component that adds selectable topic-list layouts for Horizon.
 
 ## Selector architecture
 
-The selector foundation is split into four responsibilities:
+The selector foundation is split into five responsibilities:
 
 - `lib/topic-layouts.js` defines the supported layout IDs, labels, and icons.
+- `lib/topic-layout-config.js` resolves category defaults and available layouts.
 - `lib/topic-layout-preferences.js` creates context-specific storage keys and safely reads and writes `localStorage`.
 - `services/horizon-topic-layout-preferences.js` resolves the active layout and applies its document class.
 - `components/topic-layout-selector.gjs` renders the `DMenu` control and handles selection and reset actions.
@@ -26,7 +27,17 @@ horizon-topic-layouts--masonry
 
 Layout styles should scope themselves through these classes without replacing core or Horizon topic-list templates.
 
-The current fallback order is user preference, then the global theme setting. Per-category defaults and restrictions will extend the service resolution step.
+The fallback order is an allowed user preference, then the category default, then the global theme setting.
+
+## Category configuration
+
+Administrators can add Category layout rules through the component's theme settings. Each rule selects one category, its default layout, and layouts to hide through six flat boolean controls.
+
+- Every layout is available when all Hide controls are off.
+- A category default remains available even if its Hide control is on.
+- A stored user preference is ignored while that layout is hidden.
+- Categories without a configuration inherit the global default and expose every layout.
+- If duplicate configurations target one category, the first configuration is used.
 
 ## Development
 
