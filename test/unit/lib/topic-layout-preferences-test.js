@@ -1,11 +1,11 @@
+import { module, test } from "qunit";
 import {
   layoutContextKey,
   preferenceStorageKey,
   readLayoutPreference,
   removeLayoutPreference,
   writeLayoutPreference,
-} from "horizon-topic-layouts/discourse/lib/topic-layout-preferences";
-import { module, test } from "qunit";
+} from "../../../discourse/lib/topic-layout-preferences";
 
 function memoryStorage() {
   const values = new Map();

@@ -1,10 +1,10 @@
+import { module, test } from "qunit";
 import {
   topicMediaAspectRatio,
   topicMediaImageUrl,
   topicMediaMasonrySpans,
   usesTopicMedia,
-} from "horizon-topic-layouts/discourse/lib/topic-media";
-import { module, test } from "qunit";
+} from "../../../discourse/lib/topic-media";
 
 module("Unit | Lib | topic-media", function () {
   test("selects the thumbnail requested for each layout", function (assert) {

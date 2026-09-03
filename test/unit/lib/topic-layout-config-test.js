@@ -1,11 +1,11 @@
+import { module, test } from "qunit";
 import {
   availableTopicLayouts,
   categoryLayoutConfiguration,
   defaultTopicLayout,
   isTopicLayoutAvailable,
   resolveTopicLayout,
-} from "horizon-topic-layouts/discourse/lib/topic-layout-config";
-import { module, test } from "qunit";
+} from "../../../discourse/lib/topic-layout-config";
 
 const configurations = [
   {
