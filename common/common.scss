@@ -667,11 +667,12 @@
       content: "";
       position: absolute;
       inset: 0;
+      display: none;
       background: linear-gradient(
         to bottom,
-        color-mix(in srgb, var(--secondary) 5%, transparent) 20%,
-        color-mix(in srgb, var(--secondary) 55%, transparent) 60%,
-        color-mix(in srgb, var(--secondary) 96%, transparent) 100%
+        transparent 52%,
+        color-mix(in srgb, var(--topic-media-scrim) 18%, transparent) 68%,
+        color-mix(in srgb, var(--topic-media-scrim) 76%, transparent) 100%
       );
     }
 
@@ -704,6 +705,31 @@
       .d-icon {
         display: none;
       }
+    }
+  }
+
+  .topic-list-item.--high-context:has(.horizon-topic-media__image) {
+    --topic-media-scrim: light-dark(var(--primary), var(--secondary));
+    --topic-media-scrim-text: light-dark(var(--secondary), var(--primary));
+
+    .horizon-topic-media::after {
+      display: block;
+    }
+
+    .hc-topic-card__title.raw-topic-link,
+    .hc-topic-card__title.raw-topic-link a {
+      color: var(--topic-media-scrim-text);
+      text-shadow:
+        0 1px 2px var(--topic-media-scrim),
+        0 0 0.5rem var(--topic-media-scrim);
+    }
+
+    .hc-topic-card__op-timestamp,
+    .hc-topic-card__replies,
+    .hc-topic-card__likes,
+    .hc-topic-card__votes,
+    .hc-topic-card__time {
+      color: color-mix(in srgb, var(--topic-media-scrim-text) 82%, transparent);
     }
   }
 }
@@ -805,12 +831,6 @@
     block-size: 100%;
   }
 
-  .hc-topic-card__title {
-    text-shadow:
-      0 1px 2px var(--secondary),
-      0 0 0.75rem var(--secondary);
-  }
-
   .hc-topic-card .horizon-topic-media {
     background: var(--secondary);
 
@@ -818,9 +838,9 @@
       z-index: 2;
       background: linear-gradient(
         to bottom,
-        color-mix(in srgb, var(--secondary) 8%, transparent) 10%,
-        color-mix(in srgb, var(--secondary) 72%, transparent) 55%,
-        color-mix(in srgb, var(--secondary) 98%, transparent) 100%
+        transparent 45%,
+        color-mix(in srgb, var(--topic-media-scrim) 24%, transparent) 68%,
+        color-mix(in srgb, var(--topic-media-scrim) 80%, transparent) 100%
       );
     }
   }
