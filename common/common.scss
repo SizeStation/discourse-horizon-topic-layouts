@@ -57,6 +57,16 @@
   }
 }
 
+.horizon-topic-layouts--compact,
+.horizon-topic-layouts--minimal,
+.horizon-topic-layouts--gallery,
+.horizon-topic-layouts--masonry {
+  // Horizon's mobile scroll fade cannot be positioned on a flattened footer.
+  .hc-topic-card__footer::after {
+    content: none;
+  }
+}
+
 .horizon-topic-layouts--compact {
   .topic-list.--d-topic-cards .topic-list-body {
     gap: 0;
@@ -476,11 +486,26 @@
 
 .horizon-topic-layouts--gallery,
 .horizon-topic-layouts--masonry {
-  .topic-list.--d-topic-cards .topic-list-body {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(min(100%, 17rem), 1fr));
-    gap: var(--space-4);
-    align-items: stretch;
+  .topic-list.--d-topic-cards {
+    // Give the nested grid a definite width instead of sizing the table from its cards.
+    table-layout: fixed;
+
+    @include viewport.until(sm) {
+      border-spacing: 0;
+      border-collapse: separate;
+      padding: var(--space-3);
+    }
+
+    .topic-list-body {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(min(100%, 17rem), 1fr));
+      gap: var(--space-4);
+      align-items: stretch;
+
+      @include viewport.until(sm) {
+        grid-template-columns: minmax(0, 1fr);
+      }
+    }
   }
 
   .topic-list-item.--high-context {
@@ -736,11 +761,8 @@
 
 .horizon-topic-layouts--masonry {
   .topic-list.--d-topic-cards .topic-list-body {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(min(100%, 17rem), 1fr));
     grid-auto-flow: dense;
     grid-auto-rows: 0.125rem;
-    column-gap: var(--space-4);
     row-gap: 0.125rem;
   }
 
@@ -873,6 +895,7 @@
 
   @include viewport.until(sm) {
     .topic-list-item.--high-context {
+      grid-column: 1 / -1;
       grid-row: span var(--topic-media-row-span, 61);
     }
   }

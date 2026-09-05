@@ -49,9 +49,11 @@ Minimal presents topic data as flat, border-separated rows containing the title,
 
 Media list preserves the native high-context card content and adds a lazy-loaded topic thumbnail on the left. It requests a 320×240 optimized thumbnail, falls back to the original topic image while optimized thumbnails are generated, and displays a category-colored placeholder for topics without an image.
 
-Gallery presents topics in a responsive, uniform-height grid with 640×480 image backgrounds. Cards retain the title, category, up to two tags, status, statistics, and activity while omitting author details and excerpts. Category and tags occupy a separate row above the statistics and activity to prevent crowded metadata. A theme-aware overlay keeps card content readable, and topics without images reuse the category-colored placeholder.
+Gallery presents topics in a responsive, uniform-height grid with 640×480 image backgrounds. Cards retain the title, category, up to two tags (one on mobile), status, statistics, and activity while omitting author details and excerpts. Metadata shares a row beneath the title. A theme-aware overlay keeps card content readable, and topics without images reuse the category-colored placeholder.
 
-Masonry reuses the Gallery image cards in a responsive dense mosaic. Card spans are calculated from each loaded image's intrinsic dimensions and the rendered grid measurements. Only panoramic images span two columns; ordinary landscape images remain one column and become shorter, while portrait images extend vertically. Fine-grained grid rows closely match the calculated image height while reserving consistent space between cards. Images use containment rather than cropping so the complete requested thumbnail remains visible, and a stronger theme-aware scrim keeps titles readable over pale imagery. Narrow viewports keep every card to one column. Gallery metadata and category-colored fallback behavior are preserved.
+Masonry reuses the Gallery image cards in a responsive dense mosaic. Card spans are calculated from each loaded image's intrinsic dimensions and the rendered grid measurements. Landscape images expand across available columns to meet the minimum card height; portrait images extend vertically. Images that still cannot meet the minimum height use containment over a blurred backdrop rather than cropping. Pinned topics without images become short, full-width banners. Narrow viewports keep every card to one column, with a gutter separating cards from the screen edges and navigation border.
+
+The image modifier owns masonry measurement and cleanup. It recalculates on image load, layout changes, and grid resizing, and removes its observer and span overrides when the image or layout changes. Gallery and Masonry share their base grid styles; the containing table uses fixed layout so its intrinsic sizing cannot widen that grid. Layouts that flatten Horizon's footer also disable its mobile scroll-fade pseudo-element, which otherwise overlays cards and timestamps.
 
 These modes assume Horizon's default `topic_card_high_context` setting remains enabled.
 
@@ -63,3 +65,11 @@ Install this nested theme component's dependencies independently from the main D
 pnpm install --ignore-workspace --frozen-lockfile
 pnpm lint
 ```
+
+From the Discourse root, run the component's responsive system tests:
+
+```sh
+bin/rspec theme-components/horizon-topic-layouts/spec/system/responsive_topic_layouts_spec.rb
+```
+
+These cover Gallery, Masonry, and Minimal at 360px, 425px, and desktop widths, including desktop-to-mobile resizing, loaded images, a pinned placeholder, long metadata, and reply timestamps. JavaScript unit and component tests live in `test/`; the component tests cover switching layouts with an already-loaded image and recreating an image before resizing.

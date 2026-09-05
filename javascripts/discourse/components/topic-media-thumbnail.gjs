@@ -1,8 +1,7 @@
 import Component from "@glimmer/component";
-import { on } from "@ember/modifier";
-import { action } from "@ember/object";
 import { service } from "@ember/service";
-import { htmlSafe } from "@ember/template";
+import { trustHTML } from "@ember/template";
+import { modifier } from "ember-modifier";
 import dIcon from "discourse/ui-kit/helpers/d-icon";
 import {
   topicMediaImageUrl,
@@ -15,18 +14,46 @@ const CATEGORY_COLOR_PATTERN = /^[0-9a-f]{6}$/i;
 export default class TopicMediaThumbnail extends Component {
   @service("horizon-topic-layout-preferences") layoutPreferences;
 
-  #classificationFrame;
-  #gridInlineSize;
-  #resizeObserver;
+  classifyImage = modifier((image, [isMasonry]) => {
+    const topicCard = image.closest(".topic-list-item");
+    const topicGrid = topicCard?.closest(".topic-list-body");
 
-  willDestroy() {
-    super.willDestroy(...arguments);
-
-    if (this.#classificationFrame) {
-      globalThis.cancelAnimationFrame(this.#classificationFrame);
+    if (!isMasonry || !topicGrid) {
+      return;
     }
-    this.#resizeObserver?.disconnect();
-  }
+
+    let classificationFrame;
+    let gridInlineSize;
+    const scheduleClassification = () => {
+      globalThis.cancelAnimationFrame(classificationFrame);
+      classificationFrame = globalThis.requestAnimationFrame(() => {
+        if (image.isConnected && image.naturalWidth && image.naturalHeight) {
+          this.#classifyLoadedImage(image, topicCard);
+        }
+      });
+    };
+    const resizeObserver = new ResizeObserver(([entry]) => {
+      const inlineSize = entry.contentRect.width;
+
+      if (inlineSize !== gridInlineSize) {
+        gridInlineSize = inlineSize;
+        scheduleClassification();
+      }
+    });
+
+    image.addEventListener("load", scheduleClassification);
+    resizeObserver.observe(topicGrid);
+    scheduleClassification();
+
+    return () => {
+      globalThis.cancelAnimationFrame(classificationFrame);
+      resizeObserver.disconnect();
+      image.removeEventListener("load", scheduleClassification);
+      topicCard.style.removeProperty("--topic-media-column-span");
+      topicCard.style.removeProperty("--topic-media-row-span");
+      topicCard.classList.remove("has-constrained-media");
+    };
+  });
 
   get categoryColorStyle() {
     const color = this.args.outletArgs.topic.category?.color;
@@ -35,7 +62,7 @@ export default class TopicMediaThumbnail extends Component {
       return;
     }
 
-    return htmlSafe(`--topic-media-category-color: #${color}`);
+    return trustHTML(`--topic-media-category-color: #${color}`);
   }
 
   get imageUrl() {
@@ -53,53 +80,36 @@ export default class TopicMediaThumbnail extends Component {
     return usesTopicMedia(this.layoutPreferences.activeLayoutId);
   }
 
-  @action
-  classifyImage(event) {
-    const image = event.currentTarget;
-    const topicCard = image.closest(".topic-list-item");
-
-    if (!topicCard) {
-      return;
-    }
-
-    this.#observeGrid(image, topicCard);
-    this.#scheduleClassification(image, topicCard);
-  }
-
   #classifyLoadedImage(image, topicCard) {
-    if (!topicCard.isConnected) {
+    const card = image.closest(".hc-topic-card");
+    const masonryGrid = topicCard.closest(".topic-list-body");
+
+    if (!card || !masonryGrid) {
       return;
     }
 
     topicCard.style.setProperty("--topic-media-column-span", 1);
 
-    const masonryGrid = topicCard.closest(".topic-list-body");
-    let metrics;
-
-    if (masonryGrid && this.layoutPreferences.activeLayoutId === "masonry") {
-      const cardStyles = globalThis.getComputedStyle(
-        image.closest(".hc-topic-card")
-      );
-      const gridStyles = globalThis.getComputedStyle(masonryGrid);
-      const itemStyles = globalThis.getComputedStyle(topicCard);
-      const columnGap = Number.parseFloat(gridStyles.columnGap);
-      const columnWidth = topicCard.getBoundingClientRect().width;
-      metrics = {
-        columnGap,
-        columnWidth,
-        itemGap: Number.parseFloat(itemStyles.marginBlockEnd),
-        maxColumnSpan: Math.max(
-          1,
-          Math.round(
-            (masonryGrid.getBoundingClientRect().width + columnGap) /
-              (columnWidth + columnGap)
-          )
-        ),
-        minimumHeight: Number.parseFloat(cardStyles.minBlockSize),
-        rowGap: Number.parseFloat(gridStyles.rowGap),
-        rowHeight: Number.parseFloat(gridStyles.gridAutoRows),
-      };
-    }
+    const cardStyles = globalThis.getComputedStyle(card);
+    const gridStyles = globalThis.getComputedStyle(masonryGrid);
+    const itemStyles = globalThis.getComputedStyle(topicCard);
+    const columnGap = Number.parseFloat(gridStyles.columnGap);
+    const columnWidth = topicCard.getBoundingClientRect().width;
+    const metrics = {
+      columnGap,
+      columnWidth,
+      itemGap: Number.parseFloat(itemStyles.marginBlockEnd),
+      maxColumnSpan: Math.max(
+        1,
+        Math.round(
+          (masonryGrid.getBoundingClientRect().width + columnGap) /
+            (columnWidth + columnGap)
+        )
+      ),
+      minimumHeight: Number.parseFloat(cardStyles.minBlockSize),
+      rowGap: Number.parseFloat(gridStyles.rowGap),
+      rowHeight: Number.parseFloat(gridStyles.gridAutoRows),
+    };
 
     const { columnSpan, isConstrained, rowSpan } = topicMediaMasonrySpans(
       {
@@ -113,41 +123,6 @@ export default class TopicMediaThumbnail extends Component {
     topicCard.style.setProperty("--topic-media-column-span", columnSpan);
     topicCard.style.setProperty("--topic-media-row-span", rowSpan);
     topicCard.classList.toggle("has-constrained-media", isConstrained);
-  }
-
-  #observeGrid(image, topicCard) {
-    if (this.#resizeObserver) {
-      return;
-    }
-
-    const topicGrid = topicCard.closest(".topic-list-body");
-
-    if (!topicGrid) {
-      return;
-    }
-
-    this.#resizeObserver = new ResizeObserver(([entry]) => {
-      const inlineSize = entry.contentRect.width;
-
-      if (inlineSize === this.#gridInlineSize) {
-        return;
-      }
-
-      this.#gridInlineSize = inlineSize;
-      this.#scheduleClassification(image, topicCard);
-    });
-    this.#resizeObserver.observe(topicGrid);
-  }
-
-  #scheduleClassification(image, topicCard) {
-    if (this.#classificationFrame) {
-      globalThis.cancelAnimationFrame(this.#classificationFrame);
-    }
-
-    this.#classificationFrame = globalThis.requestAnimationFrame(() => {
-      this.#classificationFrame = null;
-      this.#classifyLoadedImage(image, topicCard);
-    });
   }
 
   <template>
@@ -169,7 +144,7 @@ export default class TopicMediaThumbnail extends Component {
             alt=""
             loading="lazy"
             decoding="async"
-            {{on "load" this.classifyImage}}
+            {{this.classifyImage this.isMasonry this.imageUrl}}
           />
         {{else}}
           <div
