@@ -229,10 +229,10 @@
 
   .hc-topic-card {
     display: grid;
-    grid-template-columns: min-content minmax(0, 1fr) auto;
+    grid-template-columns: min-content minmax(0, 1fr) auto auto;
     grid-template-areas:
-      "status content replies"
-      ". tags activity";
+      "status content content content"
+      ". tags replies activity";
     align-items: center;
     column-gap: var(--space-3);
     row-gap: var(--space-1);
@@ -380,8 +380,18 @@
   }
 
   @include viewport.until(sm) {
-    .hc-topic-card__tags > li:nth-child(n + 2) {
-      display: none;
+    .hc-topic-card__category-tags {
+      max-inline-size: none;
+    }
+
+    .hc-topic-card__tags {
+      min-inline-size: 0;
+      flex-shrink: 1;
+      gap: var(--space-1);
+
+      .discourse-tag {
+        display: block;
+      }
     }
 
     .hc-topic-card__op,

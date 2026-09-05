@@ -45,7 +45,7 @@ Comfortable deliberately adds no visual overrides and preserves Horizon's native
 
 Compact restyles those existing cards without replacing their template. It keeps the creator avatar, title, shortened excerpt, category, up to three tags, status, activity time, and topic statistics while hiding verbose author text, assignment details, and reply wording. Wide viewports place category and tags above replies and activity in a stable metadata region; narrower viewports move that metadata into secondary rows.
 
-Minimal presents topic data as flat, border-separated rows containing the title, up to three tags, replies, activity, and compact topic-status icons. Narrow viewports show one tag and move tags and activity to a second line. The supplementary Hot status is omitted.
+Minimal presents topic data as flat, border-separated rows containing the title, up to three tags, replies, activity, and compact topic-status icons. Narrow viewports keep the title on the first line and show up to three tags below it, with replies immediately before the activity timestamp on the right. Long tags truncate to fit the available space. The supplementary Hot status is omitted.
 
 Media list preserves the native high-context card content and adds a lazy-loaded topic thumbnail on the left. It requests a 320×240 optimized thumbnail, falls back to the original topic image while optimized thumbnails are generated, and displays a category-colored placeholder for topics without an image.
 

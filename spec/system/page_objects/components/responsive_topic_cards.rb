@@ -23,6 +23,25 @@ module PageObjects
         )
       end
 
+      def has_visible_tags?(topic, tags)
+        page.has_css?(
+          ".topic-list-item[data-topic-id='#{topic.id}'] .hc-topic-card__tags",
+        ) do |list|
+          list.all(".discourse-tag").map { |tag| tag["data-tag-name"] } == tags.map(&:name)
+        end
+      end
+
+      def has_hidden_tag?(topic, tag)
+        page.has_css?(
+          ".topic-list-item[data-topic-id='#{topic.id}'] .discourse-tag[data-tag-name='#{tag.name}']",
+          visible: :hidden,
+        )
+      end
+
+      def has_no_tags?(topic)
+        page.has_no_css?(".topic-list-item[data-topic-id='#{topic.id}'] .discourse-tag")
+      end
+
       def has_loaded_images?(count:)
         page.has_css?(".horizon-topic-media__image", count: count) do |image|
           image.evaluate_script("this.complete && this.naturalWidth > 0")
@@ -56,12 +75,22 @@ module PageObjects
               cards: cards.map((card) => {
                 const bounds = card.getBoundingClientRect();
                 const footer = card.querySelector(".hc-topic-card__footer");
+                const visibleBounds = (selector) => {
+                  return Array.from(card.querySelectorAll(selector))
+                    .map((element) => element.getBoundingClientRect().toJSON())
+                    .find((rectangle) => rectangle.width > 0 && rectangle.height > 0) || null;
+                };
 
                 return {
                   left: bounds.left,
                   right: bounds.right,
                   top: bounds.top,
                   bottom: bounds.bottom,
+                  innerRight: bounds.right - parseFloat(getComputedStyle(card).paddingRight),
+                  title: visibleBounds(".hc-topic-card__content"),
+                  tags: visibleBounds(".hc-topic-card__tags") ? visibleBounds(".hc-topic-card__category-tags") : null,
+                  replies: visibleBounds(".hc-topic-card__replies"),
+                  activity: visibleBounds(".hc-topic-card__time, .hc-topic-card__op-timestamp"),
                   metadata: Array.from(card.querySelectorAll(
                     ".hc-topic-card__content, .hc-topic-card__category-tags, .hc-topic-card__stats, .hc-topic-card__context"
                   )).map((element) => element.getBoundingClientRect().toJSON())
