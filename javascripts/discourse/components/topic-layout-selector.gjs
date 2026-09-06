@@ -48,6 +48,10 @@ export default class TopicLayoutSelector extends Component {
     );
   }
 
+  get shouldRender() {
+    return this.layoutPreferences.isSupportedContext && this.layouts.length > 1;
+  }
+
   get triggerLabel() {
     return i18n(this.activeLayout.label);
   }
@@ -69,7 +73,7 @@ export default class TopicLayoutSelector extends Component {
   }
 
   <template>
-    {{#if this.layoutPreferences.isSupportedContext}}
+    {{#if this.shouldRender}}
       <div class="horizon-topic-layout-selector">
         <DMenu
           @contentClass="horizon-topic-layout-selector__menu"

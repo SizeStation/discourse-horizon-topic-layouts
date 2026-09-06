@@ -35,6 +35,7 @@ Administrators can add Category layout rules through the component's theme setti
 
 - Every layout is available when all Hide controls are off.
 - A category default remains available even if its Hide control is on.
+- When only one layout is available, it still applies, but the layout selector is hidden.
 - A stored user preference is ignored while that layout is hidden.
 - Categories without a configuration inherit the global default and expose every layout.
 - If duplicate configurations target one category, the first configuration is used.
