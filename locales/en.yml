@@ -4,15 +4,15 @@ en:
     settings:
       global_default_layout: The layout used when a visitor has not chosen one.
       category_layout_rules:
-        description: Set a default layout and hide layouts for individual categories.
+        description: Set a default layout and hide layouts for one or more categories per rule.
         schema:
           properties:
             categories:
-              label: Category
-              description: Select one category for this rule.
+              label: Categories
+              description: Select one or more categories for this rule.
             default_layout:
               label: Default layout
-              description: The layout used when a visitor has not chosen one for this category.
+              description: The layout used when a visitor has not chosen one for a selected category.
             hide_comfortable:
               label: Hide comfortable
             hide_compact:

@@ -31,14 +31,14 @@ The fallback order is an allowed user preference, then the category default, the
 
 ## Category configuration
 
-Administrators can add Category layout rules through the component's theme settings. Each rule selects one category, its default layout, and layouts to hide through six flat boolean controls.
+Administrators can add Category layout rules through the component's theme settings. Each rule selects one or more categories, their shared default layout, and layouts to hide through six flat boolean controls. Visitor preferences remain separate for each category.
 
 - Every layout is available when all Hide controls are off.
 - A category default remains available even if its Hide control is on.
 - When only one layout is available, it still applies, but the layout selector is hidden.
 - A stored user preference is ignored while that layout is hidden.
 - Categories without a configuration inherit the global default and expose every layout.
-- If duplicate configurations target one category, the first configuration is used.
+- If rules overlap, the first matching rule is used for that category.
 
 ## Layout implementations
 

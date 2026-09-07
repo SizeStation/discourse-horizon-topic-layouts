@@ -27,6 +27,49 @@ module("Unit | Lib | topic-layout-config", function () {
     );
   });
 
+  test("applies a shared rule to every selected category", function (assert) {
+    const sharedRules = [{ ...configurations[0], categories: [42, "43"] }];
+
+    for (const categoryId of [42, 43]) {
+      assert.strictEqual(
+        defaultTopicLayout(categoryId, sharedRules, "comfortable"),
+        "gallery",
+        `category ${categoryId} uses the shared default`
+      );
+      assert.deepEqual(
+        availableTopicLayouts(categoryId, sharedRules, "comfortable").map(
+          ({ id }) => id
+        ),
+        ["media-list", "gallery", "masonry"],
+        `category ${categoryId} uses the shared visibility rules`
+      );
+    }
+
+    assert.strictEqual(
+      categoryLayoutConfiguration(7, sharedRules),
+      null,
+      "unselected categories are unaffected"
+    );
+  });
+
+  test("uses the first matching rule when category selections overlap", function (assert) {
+    const overlappingRules = [
+      { ...configurations[0], categories: [42, 43] },
+      { categories: [43, 44], default_layout: "compact" },
+    ];
+
+    assert.strictEqual(
+      categoryLayoutConfiguration(43, overlappingRules),
+      overlappingRules[0],
+      "the overlapping category uses the first rule"
+    );
+    assert.strictEqual(
+      categoryLayoutConfiguration(44, overlappingRules),
+      overlappingRules[1],
+      "the other category still uses the second rule"
+    );
+  });
+
   test("uses the category default when configured", function (assert) {
     assert.strictEqual(
       defaultTopicLayout(42, configurations, "comfortable"),
