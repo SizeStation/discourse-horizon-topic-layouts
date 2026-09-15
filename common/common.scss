@@ -612,7 +612,7 @@
     min-inline-size: 0;
   }
 
-  .hc-topic-card__title.raw-topic-link {
+  .hc-topic-card__content > .hc-topic-card__title {
     display: -webkit-box;
     overflow: hidden;
     -webkit-box-orient: vertical;

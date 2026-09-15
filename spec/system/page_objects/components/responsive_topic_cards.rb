@@ -56,6 +56,48 @@ module PageObjects
         end
       end
 
+      def has_new_topic_indicator?(topic)
+        page.has_css?(
+          ".topic-list-item[data-topic-id='#{topic.id}'] .hc-topic-card__title .badge-notification.new-topic",
+          text: /\A\s*\z/,
+          visible: :all,
+        )
+      end
+
+      def new_topic_dimensions(topic)
+        page.find(".topic-list-item[data-topic-id='#{topic.id}'] .hc-topic-card").evaluate_script(
+          <<~JS,
+          (() => {
+            const heading = this.querySelector(".hc-topic-card__content > .hc-topic-card__title");
+            const title = heading.querySelector(".raw-topic-link");
+            const indicator = heading.querySelector(".badge-notification.new-topic");
+            const textNodes = document.createTreeWalker(title, NodeFilter.SHOW_TEXT);
+            const textRects = [];
+            let textNode;
+
+            while ((textNode = textNodes.nextNode())) {
+              const range = document.createRange();
+              range.selectNodeContents(textNode);
+              textRects.push(...Array.from(range.getClientRects())
+                .filter((rectangle) => rectangle.width > 0 && rectangle.height > 0)
+                .map((rectangle) => rectangle.toJSON()));
+            }
+
+            return {
+              card: this.getBoundingClientRect().toJSON(),
+              heading: heading.getBoundingClientRect().toJSON(),
+              textRects,
+              indicator: indicator.getBoundingClientRect().toJSON(),
+              lineHeight: parseFloat(getComputedStyle(heading).lineHeight),
+              headingClientHeight: heading.clientHeight,
+              headingScrollHeight: heading.scrollHeight,
+              headingOverflowY: getComputedStyle(heading).overflowY
+            };
+          })()
+        JS
+        )
+      end
+
       def dimensions
         page.evaluate_script(<<~JS)
           (() => {

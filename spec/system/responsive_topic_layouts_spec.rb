@@ -112,6 +112,108 @@ RSpec.describe "Horizon topic layouts | Responsive cards" do
     end
   end
 
+  def expect_inline_new_topic_indicator(topic, lines:)
+    expect(cards).to have_new_topic_indicator(topic)
+
+    try_until_success(reason: "Wait for the new topic indicator to follow the final title line") do
+      dimensions = cards.new_topic_dimensions(topic)
+      card = dimensions.fetch("card")
+      heading = dimensions.fetch("heading")
+      text_rects = dimensions.fetch("textRects")
+      final_text = text_rects.last
+      indicator = dimensions.fetch("indicator")
+
+      expect(text_rects.map { |rectangle| rectangle["top"].round }.uniq.size).to eq(lines)
+      expect(heading["height"]).to be_within(1).of(dimensions["lineHeight"] * lines)
+      expect(dimensions["headingScrollHeight"]).to be <= dimensions["headingClientHeight"] + 1
+      expect(indicator["width"]).to be > 0
+      expect(indicator["height"]).to be > 0
+      expect(indicator["left"] - final_text["right"]).to be_between(-1, dimensions["lineHeight"])
+      expect(indicator["top"]).to be < final_text["bottom"]
+      expect(indicator["bottom"]).to be > final_text["top"]
+      [*text_rects, indicator].each do |bounds|
+        expect(bounds["left"]).to be >= heading["left"] - 1
+        expect(bounds["right"]).to be <= heading["right"] + 1
+        expect(bounds["top"]).to be >= heading["top"] - 1
+        expect(bounds["bottom"]).to be <= heading["bottom"] + 1
+      end
+      expect(heading["left"]).to be >= card["left"] - 1
+      expect(heading["right"]).to be <= card["right"] + 1
+      expect(heading["top"]).to be >= card["top"] - 1
+      expect(heading["bottom"]).to be <= card["bottom"] + 1
+    end
+  end
+
+  def expect_clipped_new_topic_indicator(topic)
+    expect(cards).to have_new_topic_indicator(topic)
+
+    try_until_success(reason: "Wait for the overlong heading to clip the new topic indicator") do
+      dimensions = cards.new_topic_dimensions(topic)
+      heading = dimensions.fetch("heading")
+      indicator = dimensions.fetch("indicator")
+
+      expect(dimensions["textRects"].map { |rectangle| rectangle["top"].round }.uniq.size).to be > 2
+      expect(heading["height"]).to be_within(1).of(dimensions["lineHeight"] * 2)
+      expect(dimensions["headingScrollHeight"]).to be > dimensions["headingClientHeight"]
+      expect(dimensions["headingOverflowY"]).to eq("hidden")
+      expect(indicator["width"]).to be > 0
+      expect(indicator["height"]).to be > 0
+      expect(indicator["top"]).to be >= heading["bottom"]
+    end
+  end
+
+  %w[gallery masonry].each do |layout|
+    context "with new topics in the #{layout} layout" do
+      fab!(:user) { Fabricate(:user, trust_level: 1) }
+      fab!(:short_topic) do
+        Fabricate(:topic_with_op, category: category, title: "Short topic title")
+      end
+      fab!(:wrapping_topic) do
+        Fabricate(
+          :topic_with_op,
+          category: category,
+          title: "A topic title that naturally wraps onto two lines",
+        )
+      end
+      fab!(:clamped_topic) do
+        Fabricate(
+          :topic_with_op,
+          category: category,
+          title:
+            "A long topic title that wraps onto two lines and still has enough additional words to be clamped inside the card while leaving room for the new topic indicator beside it",
+        )
+      end
+
+      before do
+        component.update_setting(:global_default_layout, layout)
+        component.save!
+        sign_in(user)
+      end
+
+      [true, false].each do |mobile|
+        it "flows new dots inline and clips overlong headings on #{mobile ? "mobile" : "desktop resizing to mobile"}",
+           mobile: mobile do
+          widths = mobile ? [360, 425] : [1280, 425, 360]
+          page.current_window.resize_to(widths.first, 900)
+          visit("/latest")
+          expect(cards).to have_layout(layout, count: topics.size + 3)
+          expect(cards).to have_loaded_images(count: 2)
+
+          widths.each do |width|
+            page.current_window.resize_to(width, 900)
+
+            expect_inline_new_topic_indicator(short_topic, lines: 1)
+            expect_inline_new_topic_indicator(wrapping_topic, lines: 2)
+            expect_clipped_new_topic_indicator(clamped_topic)
+            dimensions = cards.dimensions
+            expect(dimensions["viewportWidth"]).to eq(width)
+            expect(dimensions["documentWidth"]).to be <= width + 1
+          end
+        end
+      end
+    end
+  end
+
   %w[gallery masonry minimal].each do |layout|
     context "with the #{layout} layout" do
       before do
