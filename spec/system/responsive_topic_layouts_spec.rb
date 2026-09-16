@@ -112,26 +112,45 @@ RSpec.describe "Horizon topic layouts | Responsive cards" do
     end
   end
 
-  def expect_inline_new_topic_indicator(topic, lines:)
-    expect(cards).to have_new_topic_indicator(topic)
+  def expect_leading_topic_indicator(topic, lines: nil, clipped: false, unread_count: nil)
+    if unread_count
+      expect(cards).to have_unread_topic_indicator(topic, count: unread_count)
+    else
+      expect(cards).to have_new_topic_indicator(topic)
+    end
 
-    try_until_success(reason: "Wait for the new topic indicator to follow the final title line") do
-      dimensions = cards.new_topic_dimensions(topic)
+    try_until_success(
+      reason: "Wait for the leading indicator to align with the first title line",
+    ) do
+      dimensions = cards.title_dimensions(topic)
       card = dimensions.fetch("card")
       heading = dimensions.fetch("heading")
-      text_rects = dimensions.fetch("textRects")
-      final_text = text_rects.last
+      title = dimensions.fetch("title")
+      first_text = dimensions.fetch("textRects").first
       indicator = dimensions.fetch("indicator")
+      line_height = dimensions.fetch("lineHeight")
 
-      expect(text_rects.map { |rectangle| rectangle["top"].round }.uniq.size).to eq(lines)
-      expect(heading["height"]).to be_within(1).of(dimensions["lineHeight"] * lines)
-      expect(dimensions["headingScrollHeight"]).to be <= dimensions["headingClientHeight"] + 1
+      expect(title["height"]).to be_between(line_height - 1, line_height * 2 + 1)
+      expect(title["height"]).to be_within(1).of(line_height * lines) if lines
+      if clipped
+        overflow = [
+          dimensions["titleScrollHeight"] - dimensions["titleClientHeight"],
+          dimensions["titleScrollWidth"] - dimensions["titleClientWidth"],
+        ]
+        expect(overflow.max).to be > 1
+        expect(dimensions["titleOverflow"]).to eq("hidden")
+      else
+        expect(dimensions["textRects"].map { |rectangle| rectangle["top"].round }.uniq.size).to eq(
+          lines,
+        )
+      end
+
       expect(indicator["width"]).to be > 0
       expect(indicator["height"]).to be > 0
-      expect(indicator["left"] - final_text["right"]).to be_between(-1, dimensions["lineHeight"])
-      expect(indicator["top"]).to be < final_text["bottom"]
-      expect(indicator["bottom"]).to be > final_text["top"]
-      [*text_rects, indicator].each do |bounds|
+      expect(title["left"] - indicator["right"]).to be_between(0, line_height)
+      expect(indicator["top"]).to be < first_text["bottom"]
+      expect(indicator["bottom"]).to be > first_text["top"]
+      [title, indicator].each do |bounds|
         expect(bounds["left"]).to be >= heading["left"] - 1
         expect(bounds["right"]).to be <= heading["right"] + 1
         expect(bounds["top"]).to be >= heading["top"] - 1
@@ -144,26 +163,20 @@ RSpec.describe "Horizon topic layouts | Responsive cards" do
     end
   end
 
-  def expect_clipped_new_topic_indicator(topic)
-    expect(cards).to have_new_topic_indicator(topic)
+  def expect_title_without_indicator_column(topic)
+    expect(cards).to have_no_topic_indicator(topic)
 
-    try_until_success(reason: "Wait for the overlong heading to clip the new topic indicator") do
-      dimensions = cards.new_topic_dimensions(topic)
-      heading = dimensions.fetch("heading")
-      indicator = dimensions.fetch("indicator")
+    try_until_success(reason: "Wait for the read title to fill the empty indicator column") do
+      dimensions = cards.title_dimensions(topic)
 
-      expect(dimensions["textRects"].map { |rectangle| rectangle["top"].round }.uniq.size).to be > 2
-      expect(heading["height"]).to be_within(1).of(dimensions["lineHeight"] * 2)
-      expect(dimensions["headingScrollHeight"]).to be > dimensions["headingClientHeight"]
-      expect(dimensions["headingOverflowY"]).to eq("hidden")
-      expect(indicator["width"]).to be > 0
-      expect(indicator["height"]).to be > 0
-      expect(indicator["top"]).to be >= heading["bottom"]
+      expect(dimensions["badges"]["width"]).to eq(0)
+      expect(dimensions["badges"]["height"]).to eq(0)
+      expect(dimensions["title"]["left"]).to be_within(1).of(dimensions["heading"]["left"])
     end
   end
 
   %w[gallery masonry].each do |layout|
-    context "with new topics in the #{layout} layout" do
+    context "with leading indicators in the #{layout} layout" do
       fab!(:user) { Fabricate(:user, trust_level: 1) }
       fab!(:short_topic) do
         Fabricate(:topic_with_op, category: category, title: "Short topic title")
@@ -184,6 +197,33 @@ RSpec.describe "Horizon topic layouts | Responsive cards" do
         )
       end
 
+      fab!(:single_word_topic) do
+        Fabricate(:topic_with_op, category: category).tap do |topic|
+          topic.title =
+            "AVeryLongUnbrokenTopicTitleThatMustKeepItsLeadingNewTopicIndicatorVisibleWithoutWideningTheCard"
+          # Exercise long-word layout independently of title input validation.
+          topic.save!(validate: false)
+        end
+      end
+      fab!(:read_topic) do
+        Fabricate(
+          :read_topic,
+          current_user: user,
+          category: category,
+          title: "An already read topic",
+        )
+      end
+      fab!(:unread_topic) do
+        Fabricate(
+          :new_reply_topic,
+          current_user: user,
+          category: category,
+          count: 12,
+          title:
+            "A topic with twelve unread replies and a long title that needs more than two lines while keeping its unread count visible before the first title line",
+        )
+      end
+
       before do
         component.update_setting(:global_default_layout, layout)
         component.save!
@@ -191,23 +231,31 @@ RSpec.describe "Horizon topic layouts | Responsive cards" do
       end
 
       [true, false].each do |mobile|
-        it "flows new dots inline and clips overlong headings on #{mobile ? "mobile" : "desktop resizing to mobile"}",
+        it "keeps indicators before the first title line without reserving empty columns on #{mobile ? "mobile" : "desktop resizing to mobile"}",
            mobile: mobile do
           widths = mobile ? [360, 425] : [1280, 425, 360]
           page.current_window.resize_to(widths.first, 900)
           visit("/latest")
-          expect(cards).to have_layout(layout, count: topics.size + 3)
+          expect(cards).to have_layout(layout, count: topics.size + 6)
           expect(cards).to have_loaded_images(count: 2)
 
           widths.each do |width|
             page.current_window.resize_to(width, 900)
 
-            expect_inline_new_topic_indicator(short_topic, lines: 1)
-            expect_inline_new_topic_indicator(wrapping_topic, lines: 2)
-            expect_clipped_new_topic_indicator(clamped_topic)
+            expect_leading_topic_indicator(short_topic, lines: 1)
+            expect_leading_topic_indicator(wrapping_topic, lines: 2)
+            expect_leading_topic_indicator(clamped_topic, lines: 2, clipped: true)
+            expect_leading_topic_indicator(single_word_topic, clipped: true)
+            expect_leading_topic_indicator(unread_topic, lines: 2, clipped: true, unread_count: 12)
+            expect_title_without_indicator_column(read_topic)
             dimensions = cards.dimensions
             expect(dimensions["viewportWidth"]).to eq(width)
             expect(dimensions["documentWidth"]).to be <= width + 1
+            dimensions["cards"].each do |card|
+              expect(card["left"]).to be >= dimensions["gridLeft"] - 1
+              expect(card["right"]).to be <= dimensions["gridRight"] + 1
+              expect(card["scrollWidth"]).to be <= card["clientWidth"] + 1
+            end
           end
         end
       end

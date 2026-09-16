@@ -60,17 +60,32 @@ module PageObjects
         page.has_css?(
           ".topic-list-item[data-topic-id='#{topic.id}'] .hc-topic-card__title .badge-notification.new-topic",
           text: /\A\s*\z/,
+        )
+      end
+
+      def has_unread_topic_indicator?(topic, count:)
+        page.has_css?(
+          ".topic-list-item[data-topic-id='#{topic.id}'] .hc-topic-card__title .badge-notification.unread-posts",
+          text: count.to_s,
+          exact_text: true,
+        )
+      end
+
+      def has_no_topic_indicator?(topic)
+        page.has_no_css?(
+          ".topic-list-item[data-topic-id='#{topic.id}'] .hc-topic-card__title .badge-notification",
           visible: :all,
         )
       end
 
-      def new_topic_dimensions(topic)
+      def title_dimensions(topic)
         page.find(".topic-list-item[data-topic-id='#{topic.id}'] .hc-topic-card").evaluate_script(
           <<~JS,
           (() => {
             const heading = this.querySelector(".hc-topic-card__content > .hc-topic-card__title");
             const title = heading.querySelector(".raw-topic-link");
-            const indicator = heading.querySelector(".badge-notification.new-topic");
+            const badges = heading.querySelector(".topic-post-badges");
+            const indicator = badges.querySelector(".badge-notification");
             const textNodes = document.createTreeWalker(title, NodeFilter.SHOW_TEXT);
             const textRects = [];
             let textNode;
@@ -86,12 +101,17 @@ module PageObjects
             return {
               card: this.getBoundingClientRect().toJSON(),
               heading: heading.getBoundingClientRect().toJSON(),
+              headingGap: parseFloat(getComputedStyle(heading).columnGap),
+              title: title.getBoundingClientRect().toJSON(),
+              badges: badges.getBoundingClientRect().toJSON(),
               textRects,
-              indicator: indicator.getBoundingClientRect().toJSON(),
-              lineHeight: parseFloat(getComputedStyle(heading).lineHeight),
-              headingClientHeight: heading.clientHeight,
-              headingScrollHeight: heading.scrollHeight,
-              headingOverflowY: getComputedStyle(heading).overflowY
+              indicator: indicator?.getBoundingClientRect().toJSON() || null,
+              lineHeight: parseFloat(getComputedStyle(title).lineHeight),
+              titleClientHeight: title.clientHeight,
+              titleScrollHeight: title.scrollHeight,
+              titleClientWidth: title.clientWidth,
+              titleScrollWidth: title.scrollWidth,
+              titleOverflow: getComputedStyle(title).overflow
             };
           })()
         JS

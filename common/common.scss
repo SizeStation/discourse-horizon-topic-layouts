@@ -613,7 +613,25 @@
   }
 
   .hc-topic-card__content > .hc-topic-card__title {
+    display: flex;
+    align-items: flex-start;
+
+    .topic-post-badges {
+      order: -1;
+      flex: none;
+      align-self: flex-start;
+      margin-inline-end: var(--space-1);
+      line-height: inherit;
+
+      &:not(:has(.badge-notification)) {
+        display: none;
+      }
+    }
+  }
+
+  .hc-topic-card__title.raw-topic-link {
     display: -webkit-box;
+    min-inline-size: 0;
     overflow: hidden;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 2;
