@@ -177,6 +177,11 @@ RSpec.describe "Horizon topic layouts | Responsive cards" do
       )
       expect(indicator["top"]).to be < first_text["bottom"]
       expect(indicator["bottom"]).to be > first_text["top"]
+      if unread_count
+        indicator_center = (indicator["top"] + indicator["bottom"]) / 2
+        text_center = (first_text["top"] + first_text["bottom"]) / 2
+        expect(indicator_center).to be_within(2).of(text_center)
+      end
       expect(indicator["left"]).to be_within(1).of(heading["left"])
       expect(indicator["right"]).to be <= heading["right"] + 1
       expect(indicator["top"]).to be >= heading["top"] - 1

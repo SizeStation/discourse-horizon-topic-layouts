@@ -637,6 +637,7 @@
       }
 
       .unread-posts {
+        inset-block-start: 0;
         margin-inline-end: var(--space-1);
       }
     }
