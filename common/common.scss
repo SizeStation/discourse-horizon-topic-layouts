@@ -628,6 +628,17 @@
 
     .horizon-topic-title-badges {
       display: inline;
+
+      // Core prefixes trailing badges with a non-breaking space.
+      margin-inline-start: -0.25em;
+
+      .new-topic {
+        padding-inline-start: 0;
+      }
+
+      .unread-posts {
+        margin-inline-end: var(--space-1);
+      }
     }
   }
 

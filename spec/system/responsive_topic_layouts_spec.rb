@@ -171,10 +171,13 @@ RSpec.describe "Horizon topic layouts | Responsive cards" do
         end
       expect(indicator["width"]).to be > 0
       expect(indicator["height"]).to be > 0
-      expect(first_text["left"] - indicator["right"]).to be_between(0, line_height)
+      expect(first_text["left"] - indicator["right"]).to be_between(
+        unread_count ? 3 : 0,
+        line_height,
+      )
       expect(indicator["top"]).to be < first_text["bottom"]
       expect(indicator["bottom"]).to be > first_text["top"]
-      expect(indicator["left"]).to be >= heading["left"] - 1
+      expect(indicator["left"]).to be_within(1).of(heading["left"])
       expect(indicator["right"]).to be <= heading["right"] + 1
       expect(indicator["top"]).to be >= heading["top"] - 1
       expect(indicator["bottom"]).to be <= heading["bottom"] + 1
@@ -235,6 +238,15 @@ RSpec.describe "Horizon topic layouts | Responsive cards" do
           title: "An already read topic",
         )
       end
+      fab!(:single_unread_topic) do
+        Fabricate(
+          :new_reply_topic,
+          current_user: user,
+          category: category,
+          count: 1,
+          title: "One unread reply",
+        )
+      end
       fab!(:unread_topic) do
         Fabricate(
           :new_reply_topic,
@@ -258,8 +270,10 @@ RSpec.describe "Horizon topic layouts | Responsive cards" do
           widths = mobile ? [360, 425] : [1280, 425, 360]
           resize_viewport(widths.first)
           visit("/latest")
-          expect(cards).to have_layout(layout, count: topics.size + 6)
+          expect(cards).to have_layout(layout, count: topics.size + 7)
+          page.scroll_to(:bottom)
           expect(cards).to have_loaded_images(count: 2)
+          page.scroll_to(:top)
 
           widths.each do |width|
             resize_viewport(width)
@@ -268,6 +282,7 @@ RSpec.describe "Horizon topic layouts | Responsive cards" do
             expect_leading_topic_indicator(short_topic, lines: 1)
             expect_leading_topic_indicator(wrapping_topic, lines: 2)
             expect_leading_topic_indicator(clamped_topic, lines: 2, clipped: true)
+            expect_leading_topic_indicator(single_unread_topic, lines: 1, unread_count: 1)
             expect_leading_topic_indicator(unread_topic, lines: 2, clipped: true, unread_count: 12)
             expect_title_without_indicator_column(read_topic)
             dimensions = cards.dimensions
