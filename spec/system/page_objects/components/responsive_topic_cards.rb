@@ -60,14 +60,31 @@ module PageObjects
         page.has_css?(
           ".topic-list-item[data-topic-id='#{topic.id}'] .hc-topic-card__title .badge-notification.new-topic",
           text: /\A\s*\z/,
+          count: 1,
         )
       end
 
       def has_unread_topic_indicator?(topic, count:)
         page.has_css?(
-          ".topic-list-item[data-topic-id='#{topic.id}'] .hc-topic-card__title .badge-notification.unread-posts",
+          ".topic-list-item[data-topic-id='#{topic.id}'] .hc-topic-card__title a.badge-notification.unread-posts[href='#{topic.relative_url}/2']",
           text: count.to_s,
           exact_text: true,
+          count: 1,
+        )
+      end
+
+      def has_single_visible_topic_indicator?(topic)
+        page.has_css?(
+          ".topic-list-item[data-topic-id='#{topic.id}'] .hc-topic-card__title .badge-notification",
+          count: 1,
+        )
+      end
+
+      def has_hidden_original_topic_indicator?(topic)
+        page.has_css?(
+          ".topic-list-item[data-topic-id='#{topic.id}'] .hc-topic-card__content > .hc-topic-card__title > .topic-post-badges .badge-notification",
+          visible: :hidden,
+          count: 1,
         )
       end
 
@@ -84,8 +101,8 @@ module PageObjects
           (() => {
             const heading = this.querySelector(".hc-topic-card__content > .hc-topic-card__title");
             const title = heading.querySelector(".raw-topic-link");
-            const badges = heading.querySelector(".topic-post-badges");
-            const indicator = badges.querySelector(".badge-notification");
+            const badges = heading.querySelector(".horizon-topic-title-badges");
+            const indicator = badges?.querySelector(".badge-notification");
             const textNodes = document.createTreeWalker(title, NodeFilter.SHOW_TEXT);
             const textRects = [];
             let textNode;
@@ -101,17 +118,15 @@ module PageObjects
             return {
               card: this.getBoundingClientRect().toJSON(),
               heading: heading.getBoundingClientRect().toJSON(),
-              headingGap: parseFloat(getComputedStyle(heading).columnGap),
-              title: title.getBoundingClientRect().toJSON(),
-              badges: badges.getBoundingClientRect().toJSON(),
+
               textRects,
               indicator: indicator?.getBoundingClientRect().toJSON() || null,
-              lineHeight: parseFloat(getComputedStyle(title).lineHeight),
-              titleClientHeight: title.clientHeight,
-              titleScrollHeight: title.scrollHeight,
-              titleClientWidth: title.clientWidth,
-              titleScrollWidth: title.scrollWidth,
-              titleOverflow: getComputedStyle(title).overflow
+              lineHeight: parseFloat(getComputedStyle(heading).lineHeight),
+              headingClientHeight: heading.clientHeight,
+              headingScrollHeight: heading.scrollHeight,
+              headingClientWidth: heading.clientWidth,
+              headingScrollWidth: heading.scrollWidth,
+              headingOverflow: getComputedStyle(heading).overflow
             };
           })()
         JS

@@ -1,6 +1,7 @@
 import { apiInitializer } from "discourse/lib/api";
 import TopicLayoutSelector from "../components/topic-layout-selector";
 import TopicMediaThumbnail from "../components/topic-media-thumbnail";
+import TopicTitleBadges from "../components/topic-title-badges";
 
 export default apiInitializer((api) => {
   const layoutPreferences = api.container.lookup(
@@ -9,5 +10,6 @@ export default apiInitializer((api) => {
 
   api.renderInOutlet("before-create-topic-button", TopicLayoutSelector);
   api.renderInOutlet("topic-list-after-title", TopicMediaThumbnail);
+  api.renderBeforeWrapperOutlet("topic-link", TopicTitleBadges);
   api.onPageChange(() => layoutPreferences.activateCurrentRoute());
 });
